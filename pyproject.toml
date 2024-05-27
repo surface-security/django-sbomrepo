@@ -1,0 +1,8 @@
+# For new projects, consider using pyproject instead of the classic setup.py and setup.cfg - for the simple reason 
+# maintaining one file is better than many more.
+
+# Some relevant notes:
+# - Use version 0.0.1 for your first version for consistency. Versions should follow semantic versioning.
+# - Set develop as the default branch of the repo and submit PRs there.
+# - When ready to deploy a new version, merge changes in main, create a new tag and the workflows should take care of publishing things for you.
+# - Dependency-wise, try to cover as many versions as possible.
