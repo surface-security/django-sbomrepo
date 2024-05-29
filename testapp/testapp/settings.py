@@ -75,12 +75,29 @@ WSGI_APPLICATION = 'testapp.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DB_HOST = env("DB_HOST", default="NOT_THIS_ONE")
+
+if DB_HOST != "NOT_THIS_ONE":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": env("DB_NAME", default="NOT_THIS_ONE"),
+            "USER": env("DB_USER", default="NOT_THIS_ONE"),
+            "PASSWORD": env("DB_PASSWORD", default="NOT_THIS_ONE"),
+            "HOST": DB_HOST,
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": "db.sqlite3",
+        }
+    }
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "testapp.User"
 
 
 # Password validation
