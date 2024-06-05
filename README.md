@@ -8,8 +8,6 @@ The SCA module is within the main surface app, docs and code available in https:
 The SBOM repo has data from **OSV.dev** we're using it as a vulnerability database for the **SBOM repo**.
 
 
-
-
 ### Database Source
 
 **OSV.dev** is an open-source vulnerability database and triage infrastructure project, designed to help both open-source maintainers and consumers of open-source software effectively identify and address security vulnerabilities. It aims to provide precise vulnerability information in a way that is both easily accessible and actionable for developers and users of open-source software. It achieves this by automating the triage of vulnerabilities and maintaining a database where vulnerabilities are directly linked to exact affected package versions, rather than relying on the more traditional, often vague, vulnerability descriptions.
