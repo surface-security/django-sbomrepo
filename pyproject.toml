@@ -1,8 +1,99 @@
-# For new projects, consider using pyproject instead of the classic setup.py and setup.cfg - for the simple reason 
-# maintaining one file is better than many more.
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
 
-# Some relevant notes:
-# - Use version 0.0.1 for your first version for consistency. Versions should follow semantic versioning.
-# - Set develop as the default branch of the repo and submit PRs there.
-# - When ready to deploy a new version, merge changes in main, create a new tag and the workflows should take care of publishing things for you.
-# - Dependency-wise, try to cover as many versions as possible.
+[project]
+name = "django-sbomrepo"
+version = "0.0.1"
+authors = [
+    {name = "InfoSec Engineering", email = "surface@paddypowerbetfair.com"},
+]
+description = "Software Bill of Materials Repository for Django"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["django", "sbomrepo", "sbom", "dependencies", "vulnerabilities", "osv.dev", "database"]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Django",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Environment :: Web Environment",
+    "Topic :: Software Development",
+]
+dependencies = [
+    "Django >= 4.0, < 5.0",
+    "django-dynamicsettings==0.0.3",
+    "django-environ==0.10.0",
+    "requests==2.31.0",
+    "tqdm==4.65.0",
+    "packageurl-python==0.15.0",
+]
+
+[project.optional-dependencies]
+dev = ["black==23.1.0", "ruff==0.0.256"]
+test = [
+    "pytest==8.1.1",
+    "pytest-django==4.8.0",
+    "coverage==7.4.4",
+    "responses==0.25.0",
+]
+prod = ["psycopg2-binary==2.9.9"]
+
+[tool.setuptools]
+packages = ["sbomrepo"]
+
+[tool.coverage.run]
+source = ["sbomrepo"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "testapp.settings"
+python_files = [
+    "tests.py",
+    "test_*.py",
+]
+
+[tool.black]
+line-length = 120
+skip-string-normalization = true
+target-version = ['py39']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | \.venv3
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+[tool.ruff]
+exclude = [
+    '.git',
+    '__pycache__',
+    'venv',
+    'venv3',
+]
+ignore = []
+line-length = 120
+select = [
+    'E',
+    'F',
+    'W',
+    "I001",
+]
+src = ['sbomrepo']

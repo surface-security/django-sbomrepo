@@ -1,0 +1,4 @@
+AlmaLinux
+AlmaLinux:8
+npm
+GitHub Actions
