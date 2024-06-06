@@ -4,17 +4,17 @@
 
 name: tests
 
-on: workflow_dispatch
-  # pull_request:
-  #   branches:
-  #     - main
-  #     - develop
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
 
 jobs:
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python 3.11
       uses: actions/setup-python@v3
       with:
@@ -31,7 +31,7 @@ jobs:
         python-version: [3.9, 3.11]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
@@ -44,7 +44,7 @@ jobs:
 
     - name: coverage xml
       run: .tox/py/bin/coverage xml
-    - uses: codecov/codecov-action@v3
+    - uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: true

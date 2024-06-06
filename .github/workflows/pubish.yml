@@ -4,15 +4,15 @@
 
 name: publish
 
-on: workflow_dispatch
-  # release:
-  #   types: [created]
+on:
+  release:
+    types: [created]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
