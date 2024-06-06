@@ -1,12 +1,11 @@
 # Software Composition Analysis by Surface Security  
 
 ## SCA app
+The SCA module is within the main surface app, docs and code available in https://github.com/surface-security/surface/blob/sca/surface/sca.
 
 
 ## sbom-repo
 The SBOM repo has data from **OSV.dev** we're using it as a vulnerability database for the **SBOM repo**.
-
-
 
 
 ### Database Source
@@ -48,5 +47,5 @@ As requirement you will need a previous **SBOM**, we're using [cdxgen](https://g
 
 That can be done using the following curl:
 
-`curl -F 'file=@./sbom.json' "https://localhost/sbomrepo/v1/sbom?repo=${{GIT_URL}}&branch=${{GIT_BRANCH}}&main_branch={branch}"`
+`curl -F 'file=@./sbom.json' "https://localhost/v1/sbom?tla={tla}&entry={entry}&repo=${{GIT_URL}}&branch=${{GIT_BRANCH}}&main_branch={branch}"`
 
