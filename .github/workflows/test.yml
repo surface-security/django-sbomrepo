@@ -30,7 +30,7 @@ jobs:
       - name: Reformat code with Black
         run: black .
       - name: Lint code with Ruff
-        run: ruff .
+        run: ruff --fix .
 
       # Check if there are changes and commit them
       - name: Check for changes
