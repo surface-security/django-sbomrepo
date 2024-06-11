@@ -61,12 +61,12 @@ jobs:
 
       - name: Set up Django environment
         run: |
-          export PYTHONPATH=$PYTHONPATH:$PWD/testapp
+          export PYTHONPATH=$PYTHONPATH:$PWD
           export DJANGO_SETTINGS_MODULE=testapp.settings
 
       - name: Run tests and generate coverage report
         run: |
-          pytest --cov=sbomrepo --cov-report=xml
+          pytest --ds=testapp.settings --cov=sbomrepo --cov-report=xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
