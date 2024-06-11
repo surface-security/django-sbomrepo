@@ -32,19 +32,6 @@ jobs:
       - name: Lint code with Ruff
         run: ruff --fix .
 
-      # Check if there are changes and commit them
-      - name: Check for changes
-        run: |
-          if [[ `git status --porcelain` ]]; then
-            git config --global user.name "lemosd-ppb"
-            git config --global user.email "diogo.lemos@blip.pt"
-            git add .
-            git commit -m "Reformat code with Black and fix lint issues with Ruff"
-            git push
-          else
-            echo "No changes to commit"
-          fi
-
   test:
     runs-on: ubuntu-latest
     strategy:
