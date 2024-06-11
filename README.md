@@ -1,7 +1,7 @@
 # Software Composition Analysis by Surface Security  
 
 ## SCA app
-The SCA module is within the main surface app, docs and code available in https://github.com/surface-security/surface/blob/sca/surface/sca.
+The SCA module is within the main surface app, docs and code are available in https://github.com/surface-security/surface/blob/sca/surface/sca.
 
 
 ## sbom-repo
