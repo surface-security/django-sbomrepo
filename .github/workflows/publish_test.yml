@@ -1,12 +1,11 @@
 # This workflows will upload a Python Package using Twine when a release is created
 # For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
-# This optional workflow tests pushes to Pypi. 
 
 name: publish test
 
 on:
   push:
-    branches:
+    branches: 
     - testpypi
     - testpypi-*
     - testpypi/*
@@ -17,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: '3.x'
     - name: Install dependencies
