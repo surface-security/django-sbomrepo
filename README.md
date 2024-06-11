@@ -1,11 +1,9 @@
 # Software Composition Analysis by Surface Security  
 
-## SCA app
-The SCA module is within the main surface app, docs and code are available in https://github.com/surface-security/surface/blob/sca/surface/sca.
-
-
 ## sbom-repo
-The SBOM repo has data from **OSV.dev** we're using it as a vulnerability database for the **SBOM repo**.
+The SBOM repo has data from **OSV.dev** we're using it as a vulnerability database.
+
+The SBOM repo is a complementary module of Surface SCA is within the main surface app, docs and code are available in https://github.com/surface-security/surface/blob/sca/surface/sca.
 
 
 ### Database Source
