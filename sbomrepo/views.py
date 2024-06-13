@@ -1,7 +1,7 @@
 import json
 import logging
 from collections import defaultdict
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -140,7 +140,7 @@ def reimport_sbom(request: HttpRequest, serial_number: str) -> HttpResponse:
 
 
 class SBOMView(View):
-    def get(self, request: HttpRequest, serial_number: str | None) -> HttpResponse:
+    def get(self, request: HttpRequest, serial_number: str) -> HttpResponse:
         sbom = get_object_or_404(models.SBOM, pk=serial_number)
         doc = sbom.document
         doc["sbomrepo"] = {"metadata": sbom.metadata}
