@@ -29,21 +29,15 @@ Once we receive a **SBOM** we check for vulnerabilities within our Vulnerability
 
 ### How to run it
 
-The **SBOM repo** is composed by a python/django app plus a postgres database. To make the whole process as simple as possible, a `docker-compose.yml` was created.
+The **SBOM repo** is pypi package. You can install it using `pip install django-sbomrepo` within your django application. Make sure you include the `sbomrepo` in your `INSTALLED_APPS` in your `settings.py` file and update your `urls.py` file to include the `sbomrepo` urls.
 
-It includes everything the app needs, and you just need to do a `docker compose up`  which will start Django, nginx and Postgres. Then open the API at http://localhost.
+### Features
 
-
-### Import for it 
-
-Once everything is setup, you need to import results into the **SBOM repo**. 
-As requirement you will need a previous **SBOM**, we're using [cdxgen](https://github.com/CycloneDX/cdxgen) as a **SBOM** generator. 
-**TLA** is a 3 letter acronym for you to specify your application name, we used it to simplify things as much as possible but feel free to use which name you want.
-**Entry** is a second key, like a tag. **GIT_URL**,  **GIT_BRANCH** and **Branch** are pretty clear.
-
-**localhost** can be replaced by whatever url you want, feel free to deploy and use your own.
-
-That can be done using the following curl:
-
-`curl -F 'file=@./sbom.json' "https://localhost/sbomrepo/v1/sbom?repo=${{GIT_URL}}&branch=${{GIT_BRANCH}}&main_branch={branch}"`
-
+Import SBOM -> `curl -F 'file=@./sbom.json' "http://localhost:8000/sbomrepo/v1/sbom?repo=${{GIT_URL}}&branch=${{GIT_BRANCH}}&main_branch={branch}"`
+Get SBOM -> `curl "http://localhost:8000/sbomrepo/v1/sbom/<serial_number>"`
+Get SBOM and Vulnerabilities -> `curl "http://localhost:8000/sbomrepo/v1/sbom/<serial_number>?vuln_data=true"`
+List All SBOMs -> `curl "http://localhost:8000/sbomrepo/v1/sbom/all"`
+Delete SBOMs -> `curl -X DELETE "http://localhost:8000/sbomrepo/v1/sbom/delete"`
+Reimport SBOM -> `curl -X POST "http://localhost:8000/sbomrepo/v1/sbom/<serial_number>/reimport"`
+Get Vulnerability -> `curl "http://localhost:8000/sbomrepo/v1/vulnerability/<id>"`
+Get Ecosystems -> `curl "http://localhost:8000/sbomrepo/v1/ecosystems"`
