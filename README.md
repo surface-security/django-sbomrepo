@@ -31,14 +31,13 @@ Once we receive a **SBOM** we check for vulnerabilities within our Vulnerability
 
 The **SBOM repo** is pypi package. You can install it using `pip install sbom-repo` within your django application. Make sure you include the `sbomrepo` in your `INSTALLED_APPS` in your `settings.py` file and update your `urls.py` file to include the `sbomrepo` urls.
 
-### Import for it 
+### Features
 
-Once everything is setup, you need to import results into the **SBOM repo**. 
-As requirement you will need a previous **SBOM**, we're using [cdxgen](https://github.com/CycloneDX/cdxgen) as a **SBOM** generator.
-
-**localhost** can be replaced by whatever url you want, feel free to deploy and use your own.
-
-That can be done using the following curl:
-
-`curl -F 'file=@./sbom.json' "https://localhost/sbomrepo/v1/sbom?repo=${{GIT_URL}}&branch=${{GIT_BRANCH}}&main_branch={branch}"`
-
+Import SBOM -> `curl -F 'file=@./sbom.json' "http://localhost:<port>/sbomrepo/v1/sbom?repo=${{GIT_URL}}&branch=${{GIT_BRANCH}}&main_branch={branch}"`
+Get SBOM -> `curl "http://localhost:<port>/sbomrepo/v1/sbom/<serial_number>"`
+Get SBOM and Vulnerabilities -> `curl "http://localhost:<port>/sbomrepo/v1/sbom/<serial_number>?vuln_data=true"`
+List All SBOMs -> `curl "http://localhost:<port>/sbomrepo/v1/sbom/all"`
+Delete SBOMs -> `curl -X DELETE "http://localhost:<port>/sbomrepo/v1/sbom/delete"`
+Reimport SBOM -> `curl -X POST "http://localhost:<port>/sbomrepo/v1/sbom/<serial_number>/reimport"`
+Get Vulnerability -> `curl "http://localhost:<port>/sbomrepo/v1/vulnerability/<id>"`
+Get Ecosystems -> `curl "http://localhost:<port>/sbomrepo/v1/ecosystems"`
