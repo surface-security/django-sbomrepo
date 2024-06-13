@@ -29,17 +29,12 @@ Once we receive a **SBOM** we check for vulnerabilities within our Vulnerability
 
 ### How to run it
 
-The **SBOM repo** is composed by a python/django app plus a postgres database. To make the whole process as simple as possible, a `docker-compose.yml` was created.
-
-It includes everything the app needs, and you just need to do a `docker compose up`  which will start Django, nginx and Postgres. Then open the API at http://localhost.
-
+The **SBOM repo** is pypi package. You can install it using `pip install sbom-repo` within your django application. Make sure you include the `sbomrepo` in your `INSTALLED_APPS` in your `settings.py` file and update your `urls.py` file to include the `sbomrepo` urls.
 
 ### Import for it 
 
 Once everything is setup, you need to import results into the **SBOM repo**. 
-As requirement you will need a previous **SBOM**, we're using [cdxgen](https://github.com/CycloneDX/cdxgen) as a **SBOM** generator. 
-**TLA** is a 3 letter acronym for you to specify your application name, we used it to simplify things as much as possible but feel free to use which name you want.
-**Entry** is a second key, like a tag. **GIT_URL**,  **GIT_BRANCH** and **Branch** are pretty clear.
+As requirement you will need a previous **SBOM**, we're using [cdxgen](https://github.com/CycloneDX/cdxgen) as a **SBOM** generator.
 
 **localhost** can be replaced by whatever url you want, feel free to deploy and use your own.
 
