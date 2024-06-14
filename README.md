@@ -1,9 +1,9 @@
 # Software Composition Analysis by Surface Security  
 
 ## sbom-repo
-The SBOM repo has data from **OSV.dev** we're using it as a vulnerability database.
+The SBOM repo has data from **OSV.dev** as it's main source of truth and we're using it as a dependency vulnerability database.
 
-The SBOM repo is a complementary module of Surface SCA is within the main surface app, docs and code are available in https://github.com/surface-security/surface/blob/sca/surface/sca.
+The SBOM repo is a complementary module of Surface SCA is within the main surface app, docs and code are available in https://github.com/surface-security/surface/blob/sca/surface/sca. You can use it solo or via pypi as a python application.
 
 
 ### Database Source
