@@ -29,7 +29,7 @@ dependencies = [
     "django-environ==0.10.0",
     "requests==2.31.0",
     "tqdm==4.65.0",
-    "packageurl-python==0.15.0",
+    "packageurl-python==0.15.1",
 ]
 
 [project.optional-dependencies]
