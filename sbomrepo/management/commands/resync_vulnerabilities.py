@@ -12,7 +12,7 @@ from sbomrepo.utils import get_osv_ecosystems
 
 
 class Command(BaseCommand):
-    def handle(self):
+    def handle(self, *args: Any, **options: Any):
         session = requests.Session()
 
         ecosystems = get_osv_ecosystems()
