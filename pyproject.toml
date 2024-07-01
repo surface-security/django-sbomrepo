@@ -27,9 +27,9 @@ dependencies = [
     "Django >= 3.1, < 4.0",
     "django-dynamicsettings==0.0.3",
     "django-environ==0.10.0",
-    "requests==2.31.0",
-    "tqdm==4.66.3",
-    "packageurl-python==0.15.1",
+    "requests > 2, < 3",
+    "tqdm < 5",
+    "packageurl-python >= 0.15.1, < 1",
 ]
 
 [project.optional-dependencies]
