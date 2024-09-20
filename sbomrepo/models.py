@@ -21,7 +21,7 @@ class SBOM(models.Model):
 
 class Vulnerability(models.Model):
     id = models.CharField(primary_key=True, max_length=128)
-    ecosystem = models.CharField(max_length=64)
+    ecosystem = models.CharField(max_length=128)
     document = models.JSONField(encoder=DjangoJSONEncoder)
 
     created_at = models.DateTimeField(auto_now_add=True)
