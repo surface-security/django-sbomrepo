@@ -2,7 +2,7 @@ from django.apps import AppConfig
 from django.conf import settings
 
 APP_SETTINGS = dict(
-    VERSION='0.0.8',
+    VERSION='0.0.9',
 )
 
 class SbomRepoConfig(AppConfig):

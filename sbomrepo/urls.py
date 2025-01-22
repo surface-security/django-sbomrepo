@@ -24,7 +24,6 @@ from sbomrepo import views
 
 urlpatterns = [
     path("", views.index),
-    path("admin/", admin.site.urls),
     path("v1/sbom", views.SBOMView.as_view()),
     path("v1/sbom/all", views.list_sboms),
     path("v1/sbom/delete", views.delete_sboms),
