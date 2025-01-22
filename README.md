@@ -33,11 +33,11 @@ The **SBOM repo** is pypi package. You can install it using `pip install django-
 
 ### Features
 
-Import SBOM -> `curl -F 'file=@./sbom.json' "http://localhost:8000/sbomrepo/v1/sbom?repo=${{GIT_URL}}&branch=${{GIT_BRANCH}}&main_branch={branch}"`
-Get SBOM -> `curl "http://localhost:8000/sbomrepo/v1/sbom/<serial_number>"`
-Get SBOM and Vulnerabilities -> `curl "http://localhost:8000/sbomrepo/v1/sbom/<serial_number>?vuln_data=true"`
-List All SBOMs -> `curl "http://localhost:8000/sbomrepo/v1/sbom/all"`
-Delete SBOMs -> `curl -X DELETE "http://localhost:8000/sbomrepo/v1/sbom/delete"`
-Reimport SBOM -> `curl -X POST "http://localhost:8000/sbomrepo/v1/sbom/<serial_number>/reimport"`
-Get Vulnerability -> `curl "http://localhost:8000/sbomrepo/v1/vulnerability/<id>"`
-Get Ecosystems -> `curl "http://localhost:8000/sbomrepo/v1/ecosystems"`
+- **Import SBOM**: `curl -F 'file=@./sbom.json' "http://localhost:8000/sbomrepo/v1/sbom?repo=${{GIT_URL}}&branch=${{GIT_BRANCH}}&main_branch={branch}"`
+- **Get SBOM**: `curl "http://localhost:8000/sbomrepo/v1/sbom/<serial_number>"`
+- **Get SBOM and Vulnerabilities**: `curl "http://localhost:8000/sbomrepo/v1/sbom/<serial_number>?vuln_data=true"`
+- **List All SBOMs**: `curl "http://localhost:8000/sbomrepo/v1/sbom/all"`
+- **Delete SBOMs**: `curl -X DELETE "http://localhost:8000/sbomrepo/v1/sbom/delete"`
+- **Reimport SBOM**: `curl -X POST "http://localhost:8000/sbomrepo/v1/sbom/<serial_number>/reimport"`
+- **Get Vulnerability**: `curl "http://localhost:8000/sbomrepo/v1/vulnerability/<id>"`
+- **Get Ecosystems**: `curl "http://localhost:8000/sbomrepo/v1/ecosystems"`
