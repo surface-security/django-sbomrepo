@@ -28,9 +28,15 @@ def delete_sboms(request: HttpRequest) -> HttpResponse:
     grouped_sboms = defaultdict(list)
     sboms = models.SBOM.objects.defer("document").filter(active=True).order_by("-created_at")
     for sbom in sboms:
-        grouped_sboms[
-            (sbom.metadata.get("entry", "def"), sbom.metadata["repo"], sbom.metadata.get("branch", "master"))
-        ].append(sbom.serial_number)
+        if "image" in sbom.metadata:
+            group_key = (sbom.metadata.get("entry", "def"), sbom.metadata.get("image", ""), None)
+        else:
+            group_key = (
+                sbom.metadata.get("entry", "def"),
+                sbom.metadata.get("repo", ""),
+                sbom.metadata.get("branch", "master"),
+            )
+        grouped_sboms[group_key].append(sbom.serial_number)
 
     deactivated = 0
     for _, sbom_list in grouped_sboms.items():
@@ -38,7 +44,7 @@ def delete_sboms(request: HttpRequest) -> HttpResponse:
             models.SBOM.objects.defer("document").filter(serial_number__in=sbom_list[keep:]).update(active=False)
         )  # Marks all Sboms that we don't want to keep as inactive.
 
-    # Delete Inactive SBOMs older thatn 7 days
+    # Delete Inactive SBOMs older than 7 days
     deleted, _ = (
         models.SBOM.objects.defer("document")
         .filter(active=False, created_at__lte=timezone.now() - timezone.timedelta(days=7))
@@ -75,31 +81,42 @@ def list_sboms(request: HttpRequest) -> HttpResponse:
 
 
 def get_vulns_details(vulns: list[str]) -> list[dict]:
+    """Get vulnerability details for a list of vulnerability IDs."""
+    if not vulns:
+        return []
     vulnerabilities = []
     for vuln in models.Vulnerability.objects.filter(id__in=vulns):
-        doc = vuln.document
-        doc["sbomrepo"] = {"ecosystem": vuln.ecosystem, "created_at": vuln.created_at, "updated_at": vuln.updated_at}
+        doc = vuln.document.copy()  # Avoid mutating the original
+        doc["sbomrepo"] = {
+            "ecosystem": vuln.ecosystem,
+            "created_at": vuln.created_at,
+            "updated_at": vuln.updated_at,
+        }
         vulnerabilities.append(doc)
     return vulnerabilities
 
 
 def merge_duplicate_dependencies(data: list[dict]) -> list[dict]:
-    merged_data = {}
+    """Merge duplicate dependencies by combining their dependsOn lists."""
+    merged_data: dict[str, list] = {}
     for item in data:
         ref = item["ref"]
-        depends_on = item["dependsOn"]
+        depends_on = item.get("dependsOn", [])
         if ref not in merged_data:
-            merged_data[ref] = depends_on
+            merged_data[ref] = list(depends_on)  # Create a copy
         else:
             merged_data[ref].extend(depends_on)
 
-    merged_list = [{"ref": ref, "dependsOn": depends_on} for ref, depends_on in merged_data.items()]
-    return merged_list
+    return [{"ref": ref, "dependsOn": depends_on} for ref, depends_on in merged_data.items()]
 
 
 def purl_from_repo(repo: str, branch: str = "master") -> str:
+    """Create a PURL from a Git repository URL and branch."""
     parsed_url = urlparse(repo)
     path_segments = parsed_url.path.strip("/").split("/", 1)
+    
+    if len(path_segments) < 2:
+        raise ValueError(f"Invalid repository URL format: {repo}")
 
     # Extract host, namespace, and name
     git_host = parsed_url.netloc
@@ -113,6 +130,60 @@ def purl_from_repo(repo: str, branch: str = "master") -> str:
         name=git_name,
         version=branch,
         subpath="",
+    )
+
+    return PackageURL.to_string(purl)
+
+
+def purl_from_image(image_ref: str) -> str:
+    """Create a PURL from a Docker/OCI image reference.
+    
+    Supports formats:
+    - registry/namespace/image:tag
+    - registry/namespace/image@digest
+    - namespace/image:tag
+    - image:tag
+    """
+    if "@" in image_ref:
+        image_part, digest = image_ref.split("@", 1)
+        if ":" in image_part:
+            image_name, tag = image_part.rsplit(":", 1)
+        else:
+            image_name = image_part
+            tag = digest.split(":")[-1][:12]
+    else:
+        if ":" in image_ref:
+            image_name, tag = image_ref.rsplit(":", 1)
+        else:
+            image_name = image_ref
+            tag = "latest"
+
+    parts = image_name.split("/")
+    if len(parts) == 1:
+        namespace = "library"
+        name = parts[0]
+        registry = "docker.io"
+    elif len(parts) == 2:
+        if "." in parts[0] or parts[0] in ("docker.io", "gcr.io", "quay.io", "ghcr.io"):
+            registry = parts[0]
+            namespace = "library"
+            name = parts[1]
+        else:
+            registry = "docker.io"
+            namespace = parts[0]
+            name = parts[1]
+    else:
+        registry = parts[0]
+        namespace = parts[1]
+        name = "/".join(parts[2:])
+
+    purl_type = "oci" if registry in ("ghcr.io", "quay.io") else "docker"
+
+    purl = PackageURL(
+        type=purl_type,
+        namespace=f"{registry}/{namespace}" if namespace else registry,
+        name=name,
+        version=tag,
     )
 
     return PackageURL.to_string(purl)
@@ -172,16 +243,34 @@ class SBOMView(View):
 def import_sbom(sbom_data: dict[str, Any], metadata: dict[str, str]) -> tuple[models.SBOM, bool]:
     sbom_data = utils.cleanup_sbom(sbom_data)
 
-    if "repo" in metadata:
-        metadata["repo"] = utils.cleanup_git_url(metadata["repo"])
+    is_image = "image" in metadata or (
+        "repo" not in metadata and "component" in sbom_data.get("metadata", {})
+        and sbom_data["metadata"]["component"].get("purl", "").startswith(("pkg:oci/", "pkg:docker/"))
+    )
 
-    if "branch" in metadata:
-        metadata["branch"] = utils.cleanup_branch(metadata["branch"])
+    if is_image:
+        # Handle Docker/OCI image metadata
+        # Images don't have branches - they use tags/digests instead
+        if "image" in metadata:
+            metadata["image"] = utils.cleanup_image_ref(metadata["image"])
+        elif "repo" in metadata:
+            metadata["image"] = utils.cleanup_image_ref(metadata["repo"])
+        metadata.pop("branch", None)
+        metadata.pop("main_branch", None)
+        
+        purl = purl_from_image(metadata.get("image") or metadata.get("repo", ""))
+    else:
+        if "repo" in metadata:
+            metadata["repo"] = utils.cleanup_git_url(metadata["repo"])
 
-    if "main_branch" in metadata:
-        metadata["main_branch"] = utils.cleanup_branch(metadata["main_branch"])
+        if "branch" in metadata:
+            metadata["branch"] = utils.cleanup_branch(metadata["branch"])
 
-    purl = purl_from_repo(metadata["repo"], metadata["branch"])
+        if "main_branch" in metadata:
+            metadata["main_branch"] = utils.cleanup_branch(metadata["main_branch"])
+
+        purl = purl_from_repo(metadata["repo"], metadata.get("branch", "master"))
+
     original_purl = sbom_data.get("metadata", {}).get("component", {}).get("purl")
 
     if "metadata" in sbom_data:
@@ -191,26 +280,33 @@ def import_sbom(sbom_data: dict[str, Any], metadata: dict[str, str]) -> tuple[mo
         except ValueError as e:
             logger.warning(f"Invalid purl format or error in creating PackageURL: {original_purl} - Error: {str(e)}")
 
-        if original_purl and original_purl_obj and original_purl_obj.name == "app":
-            utils.replace_purl(sbom_data, original_purl, purl)
-        else:
-            sbom_data["dependencies"].append({"ref": purl, "dependsOn": [original_purl]})
-            purl = original_purl
+        if original_purl and original_purl_obj:
+            if is_image or original_purl_obj.name == "app":
+                utils.replace_purl(sbom_data, original_purl, purl)
+            else:
+                sbom_data["dependencies"].append({"ref": purl, "dependsOn": [original_purl]})
+                purl = original_purl
 
     primary_deps = set()
-    secundary_deps = set()
+    secondary_deps = set()
 
     for dependency in sbom_data.get("dependencies", []):
-        if dependency.get("ref") and PackageURL.from_string(dependency["ref"]).name == "app":
-            utils.replace_purl(sbom_data, dependency["ref"], purl)
+        dep_ref = dependency.get("ref")
+        if dep_ref:
+            try:
+                if PackageURL.from_string(dep_ref).name == "app":
+                    utils.replace_purl(sbom_data, dep_ref, purl)
+            except ValueError:
+                logger.warning(f"Invalid PURL in dependency: {dep_ref}")
+                continue
 
         primary_deps.add(dependency["ref"])
-        secundary_deps.update(dependency.get("dependsOn", []))
+        secondary_deps.update(dependency.get("dependsOn", []))
 
     # Merge duplicate dependencies created by replace_purl
     sbom_data["dependencies"] = merge_duplicate_dependencies(sbom_data.get("dependencies", []))
 
-    missing_dependencies = primary_deps - secundary_deps
+    missing_dependencies = primary_deps - secondary_deps
     if missing_dependencies and purl in missing_dependencies:
         missing_dependencies.remove(purl)
         for dep in sbom_data.get("dependencies", []):
