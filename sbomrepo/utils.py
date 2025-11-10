@@ -18,14 +18,21 @@ def chunked_iterable(iterable, size: int):
         yield chunk
 
 
-def get_osv_ecosystems(short=False) -> list[str]:
-    res = requests.get("https://osv-vulnerabilities.storage.googleapis.com/ecosystems.txt")
-    res.raise_for_status()
-    ecosystems = res.text.splitlines()
-    if short:
-        ecosystems = [eco.split(":")[0] for eco in ecosystems]
-    ecosystems.sort()
-    return sorted(set(ecosystems), key=str.casefold)
+def get_osv_ecosystems(short: bool = False) -> list[str]:
+    """Get list of OSV ecosystems, optionally shortened."""
+    try:
+        res = requests.get(
+            "https://osv-vulnerabilities.storage.googleapis.com/ecosystems.txt",
+            timeout=30
+        )
+        res.raise_for_status()
+        ecosystems = res.text.splitlines()
+        if short:
+            ecosystems = [eco.split(":")[0] for eco in ecosystems]
+        return sorted(set(ecosystems), key=str.casefold)
+    except requests.RequestException as e:
+        logger.error(f"Failed to fetch OSV ecosystems: {e}")
+        return []
 
 
 Query = dict[str, dict[str, str]]
@@ -34,28 +41,44 @@ Purl = str
 
 
 def get_osv_vulns(initial_queries: list[Query]) -> Iterator[tuple[Purl, list[Vuln]]]:
-    for chunk_queries in chunked_iterable(initial_queries, 1000):
-        stack = [chunk_queries]
+    """Query OSV API for vulnerabilities, handling pagination."""
+    session = requests.Session()
+    try:
+        for chunk_queries in chunked_iterable(initial_queries, 1000):
+            stack = [chunk_queries]
 
-        while stack:
-            queries = stack.pop()
+            while stack:
+                queries = stack.pop()
 
-            res = requests.post("https://api.osv.dev/v1/querybatch", json={"queries": queries})
-            if res.status_code != 200:
-                logger.error("Bad response in osv.dev querybatch %s, continuing: %s", res.text, json.dumps(queries))
-                continue
+                try:
+                    res = session.post(
+                        "https://api.osv.dev/v1/querybatch",
+                        json={"queries": queries},
+                        timeout=60
+                    )
+                    res.raise_for_status()
+                except requests.RequestException as e:
+                    logger.error("Bad response in osv.dev querybatch: %s", e)
+                    continue
 
-            results = res.json()["results"]
-            for idx, result in enumerate(results):
-                if vulns := result.get("vulns"):
-                    yield queries[idx]["package"]["purl"], vulns
+                try:
+                    results = res.json()["results"]
+                except (KeyError, json.JSONDecodeError) as e:
+                    logger.error("Invalid JSON response from OSV API: %s", e)
+                    continue
 
-                if "next_page_token" in result:
-                    queries[idx]["page_token"] = result["next_page_token"]
-                    if stack:
-                        stack[0].append(queries[idx])
-                    else:
-                        stack.append([queries[idx]])
+                for idx, result in enumerate(results):
+                    if vulns := result.get("vulns"):
+                        yield queries[idx]["package"]["purl"], vulns
+
+                    if "next_page_token" in result:
+                        queries[idx]["page_token"] = result["next_page_token"]
+                        if stack:
+                            stack[0].append(queries[idx])
+                        else:
+                            stack.append([queries[idx]])
+    finally:
+        session.close()
 
 
 def cleanup_purl(purl: str) -> str:
@@ -92,6 +115,23 @@ def cleanup_git_url(git_url: str) -> str:
 
 def cleanup_branch(branch: str) -> str:
     return branch.replace("origin/", "").replace("*/", "")
+
+
+def cleanup_image_ref(image_ref: str) -> str:
+    """Clean up Docker/OCI image reference.
+    
+    Removes common prefixes and normalizes the format.
+    """
+    if image_ref.startswith("docker://"):
+        image_ref = image_ref[9:]
+
+    if image_ref.startswith("oci://"):
+        image_ref = image_ref[6:]
+    
+    if image_ref.startswith("docker.io/") and image_ref.count("/") == 1:
+        image_ref = image_ref.replace("docker.io/", "docker.io/library/", 1)
+    
+    return image_ref.strip()
 
 
 def replace_purl(sbom_data, old_purl, new_purl):
